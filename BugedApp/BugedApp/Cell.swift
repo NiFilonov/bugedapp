@@ -7,13 +7,17 @@
 
 import UIKit
 
-class Cell: UITableViewCell {
+class Cell: UITableViewCell { // eto iest view
     
-    var label: UILabel = UILabel(frame: .zero)
+    var label: UILabel?
     
     func make(with name: String) {
-        self.label = UILabel(frame: self.frame)
-        self.label.text = name
+        if label == nil {
+            self.label = UILabel(frame: self.frame)
+            self.addSubview(label!)
+        }
+        self.label!.text = name
+       
     }
     
 }

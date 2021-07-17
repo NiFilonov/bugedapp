@@ -7,51 +7,84 @@
 
 import UIKit
 
-class Quote: Codable {
-    
-     let symbol: String
-         let description: String
+struct Welcome: Codable {
+    let quotesList: [Quote]
+}
+
+// MARK: - QuotesList
+struct Quote: Codable {
+    let symbol, quotesListDescription: String
+    let digits, trade, type: Int
+
+    enum CodingKeys: String, CodingKey {
+        case symbol
+        case quotesListDescription = "description"
+        case digits, trade, type
+    }
 }
 
 class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSource {
     
-       var quotes: [Quote] = []
+    var quotes: [Quote] = []
+    var tableView: UITableView = UITableView()
+ //   var cellForReuse: UITableViewCell = UITableViewCell()
+    
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        
+        guard let url = URL(string: "https://quotes.instaforex.com/api/quotesList") else {
+            return
+            
+            
+        }
+        
+        URLSession.shared.dataTask(with: url) { data, response, error in
+            if let quotes = try? JSONDecoder().decode(Welcome.self, from: data!) {// try 3 sostojania: try! - prinuditelno, padajet, , try do catch, try? - nil
+                self.quotes = quotes.quotesList //nebezopasnyj
+                DispatchQueue.main.async {
+                   // print(quotes)
+                    self.tableView.reloadData()
+                }
+            }
+        }.resume()
+        
+        
+        
+    }
+    
+    override func viewWillAppear(_ animated: Bool) {
+        tableView = UITableView(frame: self.view.frame)
+        setTableView()
+    }
     
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+        print(quotes.count)
         return quotes.count
     }
     
-    
-
-    override func viewDidLoad() {
-        super.viewDidLoad()
-            guard let url = URL(string: "https://quotes.instaforex.com/api/quotesList") else {
-                return
-                
-                
-            }
-            
-            URLSession.shared.dataTask(with: url) { data, response, error in
-                let quotes = try! JSONDecoder().decode([Quote].self, from: data!)
-        self.quotes = quotes
-                self.tableView.reloadData()
-            }.resume()
-    }
-    
-        override func viewWillAppear(_ animated: Bool) {
-        tableView = UITableView(frame: self.view.frame)
-        }
-
-    func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell { let cell = tableView.dequeueReusableCell(withIdentifier: "cell") as! Cell
-        cell.label.text = quotes[indexPath.row].symbol
+    func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+        let cell = tableView.dequeueReusableCell(withIdentifier: "cell") as! Cell
+       // cell.backgroundColor = .blue
+        cell.make(with: quotes[indexPath.row].symbol)
         
+        //  cell.label = CGRect ()
+        //cell.label.text = quotes[indexPath.row].symbol
         
-        
-        
-        
+      
         return cell
     }
-    var tableView: UITableView = UITableView(frame: .zero)
+   
+    
+    func  setTableView() {
+        
+        tableView.dataSource = self
+        tableView.delegate = self
+        
+        tableView.backgroundColor = .red
+        tableView.register(Cell.self, forCellReuseIdentifier: "cell") // !!!!!
+        view.addSubview(tableView)
+       // tableView.addSubview(<#T##view: UIView##UIView#>)
+    }
 
 }
 
